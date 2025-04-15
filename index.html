@@ -1,1 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stickman Games - Donztzy</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      color: #333;
+      text-align: center;
+      overflow-x: hidden;
+    }
+    .menu, .game, .game-fight {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      background: #000;
+      color: white;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #444;
+    }
+    #game-container {
+      margin: 30px auto;
+      background: #fff;
+      border: 2px solid #000;
+      width: 600px;
+      height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stickman {
+      width: 30px;
+      height: 50px;
+      background: black;
+      position: absolute;
+      bottom: 0;
+      left: 50px;
+    }
+    .obstacle {
+      width: 20px;
+      height: 40px;
+      background: red;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      animation: moveLeft 2s linear infinite;
+    }
+    @keyframes moveLeft {
+      from { right: -20px; }
+      to { right: 620px; }
+    }
+    .jump {
+      animation: jump 0.5s ease;
+    }
+    @keyframes jump {
+      0% { bottom: 0; }
+      50% { bottom: 100px; }
+      100% { bottom: 0; }
+    }
+    .player, .enemy {
+      width: 50px;
+      height: 80px;
+      background: black;
+      position: absolute;
+      bottom: 0;
+    }
+    .player {
+      left: 100px;
+    }
+    .enemy {
+      right: 100px;
+      background: darkred;
+    }
+    .hp-bar {
+      width: 200px;
+      height: 20px;
+      background: #ccc;
+      margin: 10px auto;
+      position: relative;
+      border: 1px solid #333;
+    }
+    .hp {
+      height: 100%;
+      background: green;
+    }
+    #powered {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
 
+  <div class="menu active" id="menu">
+    <h1>Stickman Mini Games</h1>
+    <button onclick="showGame('jump')">Stickman Jump</button>
+    <button onclick="showGame('fight')">Stickman Fight</button>
+    <div id="powered">Powered by Donztzy</div>
+  </div>
+
+  <!-- Game: Stickman Jump -->
+  <div class="game" id="game-jump">
+    <h2>Stickman Jump</h2>
+    <div id="game-container">
+      <div class="stickman" id="stickman"></div>
+      <div class="obstacle" id="obstacle"></div>
+    </div>
+    <div id="score">Score: 0 | High Score: <span id="highscore">0</span></div>
+    <button onclick="restartGame()">Restart</button>
+    <button onclick="backToMenu()">Back to Menu</button>
+  </div>
+
+  <!-- Game: Stickman Fight -->
+  <div class="game-fight" id="game-fight">
+    <h2>Stickman Fight</h2>
+    <div class="hp-bar"><div class="hp" id="hp1" style="width: 100%"></div></div>
+    <div class="hp-bar"><div class="hp" id="hp2" style="width: 100%"></div></div>
+    <div id="game-container">
+      <div class="player" id="player"></div>
+      <div class="enemy" id="enemy"></div>
+    </div>
+    <p>Player 1: A = Hit</p>
+    <p>Player 2: ← = Hit</p>
+    <button onclick="resetFight()">Restart Fight</button>
+    <button onclick="backToMenu()">Back to Menu</button>
+  </div>
+
+  <script>
+    function showGame(name) {
+      document.querySelectorAll('.menu, .game, .game-fight').forEach(e => e.classList.remove('active'));
+      if (name === 'jump') document.getElementById('game-jump').classList.add('active');
+      if (name === 'fight') document.getElementById('game-fight').classList.add('active');
+    }
+    function backToMenu() {
+      location.reload();
+    }
+
+    // Stickman Jump Logic
+    const stickman = document.getElementById('stickman');
+    const obstacle = document.getElementById('obstacle');
+    const scoreDisplay = document.getElementById('score');
+    const highscoreDisplay = document.getElementById('highscore');
+    let score = 0, highscore = 0, gameOver = false;
+
+    document.body.addEventListener('keydown', e => {
+      if (document.getElementById('game-jump').classList.contains('active') && e.code === 'Space') jump();
+    });
+    document.body.addEventListener('click', () => {
+      if (document.getElementById('game-jump').classList.contains('active')) jump();
+    });
+
+    function jump() {
+      if (stickman.classList.contains('jump')) return;
+      stickman.classList.add('jump');
+      setTimeout(() => stickman.classList.remove('jump'), 500);
+    }
+
+    const gameLoop = setInterval(() => {
+      if (!document.getElementById('game-jump').classList.contains('active')) return;
+      const stickmanTop = parseInt(window.getComputedStyle(stickman).getPropertyValue("bottom"));
+      const obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue("right"));
+
+      if (obstacleLeft > 520 && obstacleLeft < 570 && stickmanTop < 40 && !gameOver) {
+        gameOver = true;
+        alert("Game Over! Skor kamu: " + score);
+        if (score > highscore) {
+          highscore = score;
+          highscoreDisplay.textContent = highscore;
+        }
+      }
+
+      if (!gameOver) {
+        score++;
+        scoreDisplay.innerText = "Score: " + score + " | High Score: " + highscore;
+      }
+    }, 100);
+
+    function restartGame() {
+      score = 0;
+      gameOver = false;
+    }
+
+    // Stickman Fight Logic
+    const hp1 = document.getElementById('hp1');
+    const hp2 = document.getElementById('hp2');
+    let hp1Value = 100, hp2Value = 100;
+
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('game-fight').classList.contains('active')) return;
+
+      if (e.code === 'KeyA') {
+        hp2Value -= 10;
+        hp2.style.width = hp2Value + '%';
+      }
+      if (e.code === 'ArrowLeft') {
+        hp1Value -= 10;
+        hp1.style.width = hp1Value + '%';
+      }
+
+      if (hp1Value <= 0) alert('Player 2 Wins!');
+      if (hp2Value <= 0) alert('Player 1 Wins!');
+    });
+
+    function resetFight() {
+      hp1Value = 100;
+      hp2Value = 100;
+      hp1.style.width = '100%';
+      hp2.style.width = '100%';
+    }
+  </script>
+
+</body>
+  </html>
